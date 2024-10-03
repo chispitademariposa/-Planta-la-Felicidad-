@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Aprendamos a plantar juntos!</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #88c057;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #hud {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #farm-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-template-rows: repeat(10, 50px);
+            gap: 5px;
+            margin: 100px auto;
+            width: max-content;
+        }
+
+        .farm-cell {
+            width: 50px;
+            height: 50px;
+            background-color: #c4a484;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .farm-cell:hover {
+            background-color: #a6865e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Interfaz de usuario -->
+    <div id="hud">
+        <span id="time-display">Hora actual: 6:00</span> | 
+        <span id="energy-display">Energía: 100</span> | 
+        <span id="inventory">Madera: 0, Piedra: 0</span>
+    </div>
+
+    <!-- Cuadrícula de la granja -->
+    <div id="farm-grid"></div>
+
+    <!-- Sonido de plantar -->
+    <audio id="plant-sound" src="https://www.myinstants.com/media/sounds/dirt.mp3"></audio>
+
+    <script>
+        // Variables globales
+        let currentHour = 6;
+        let farm = Array(10).fill().map(() => Array(10).fill("empty"));
+        let inventory = { wood: 0, stone: 0 };
+        let npc = { name: "Emily", relationship: 0 };
+        let mission = { description: "Recoge 10 piedras.", completed: false, reward: 100 };
+        const plantSound = document.getElementById('plant-sound');
+
+        // Avanzar tiempo
+        function advanceTime() {
+            currentHour += 1;
+            if (currentHour === 24) {
+                currentHour = 0;  // Comienza un nuevo día
+            }
+            document.getElementById('time-display').innerHTML = `Hora actual: ${currentHour}:00`;
+        }
+        setInterval(advanceTime, 1000);  // Cada segundo aumenta una hora
+
+        // Crear la cuadrícula de la granja
+        const farmGrid = document.getElementById('farm-grid');
+        for (let i = 0; i < 10; i++) {
+            for (let j = 0; j < 10; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('farm-cell');
+                cell.id = `cell-${i}-${j}`;
+                cell.addEventListener('click', () => plantSeed(i, j));  // Plantar semilla al hacer click
+                farmGrid.appendChild(cell);
+            }
+        }
+
+        // Plantar semillas
+        function plantSeed(x, y) {
+            if (farm[x][y] === "empty") {
+                farm[x][y] = { growth: 0 };
+                document.getElementById(`cell-${x}-${y}`).innerHTML = "🌱";
+                
+                // Sonar sonido de plantar
+                plantSound.play();
+
+                // Verificar si todas las celdas están plantadas
+                if (checkIfAllPlanted()) {
+                    alert("¡Has plantado en todas las celdas! El juego se reiniciará.");
+                    resetFarm();
+                }
+            }
+        }
+
+        // Verifica si todas las celdas están plantadas
+        function checkIfAllPlanted() {
+            return farm.every(row => row.every(cell => cell !== "empty"));
+        }
+
+        // Reiniciar la granja
+        function resetFarm() {
+            farm = Array(10).fill().map(() => Array(10).fill("empty"));
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 10; j++) {
+                    document.getElementById(`cell-${i}-${j}`).innerHTML = "";
+                }
+            }
+        }
+
+        // Recolección de recursos
+        function collectResource(resource) {
+            inventory[resource] += 1;
+            document.getElementById('inventory').innerHTML = `Madera: ${inventory.wood}, Piedra: ${inventory.stone}`;
+        }
+
+        // Crear objetos
+        function craftItem() {
+            if (inventory.wood >= 5 && inventory.stone >= 3) {
+                inventory.wood -= 5;
+                inventory.stone -= 3;
+                alert('Has creado una herramienta.');
+            } else {
+                alert('No tienes suficientes recursos.');
+            }
+        }
+
+        // Interacción con NPC
+        function interactWithNPC() {
+            npc.relationship += 1;
+            alert(`Has hablado con ${npc.name}. Nivel de amistad: ${npc.relationship}`);
+        }
+
+        // Completar misión
+        function completeMission() {
+            if (inventory.stone >= 10 && !mission.completed) {
+                mission.completed = true;
+                alert(`Misión completada. Has ganado ${mission.reward} monedas.`);
+            } else {
+                alert('No has completado la misión aún.');
+            }
+        }
+    </script>
+</body>
+</html>
+
